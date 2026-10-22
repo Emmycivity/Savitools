@@ -13,6 +13,7 @@ import {
   parseSorobanEventsFromMeta,
 } from './event-parser';
 import { decodeAuthorizationEntry, DecodedAuthorizationEntry } from './auth-entry-decoder';
+import { StrKeyBatchValidation, strKeyBatchToCsv, validateStrKeyBatch } from './strkey-validation';
 
 export interface DecodedEffect {
   type: string;
@@ -302,6 +303,18 @@ export class InspectorService {
     }
 
     return CSV_BOM + toCsv([header, ...rows]);
+  }
+
+  // ─── POST /inspector/strkey/validate(/export) ─────────────────────────────
+
+  /** Offline batch StrKey validation (Savitura/Savitools#500); no Horizon call. */
+  validateStrKeys(inputs: string[]): StrKeyBatchValidation {
+    return validateStrKeyBatch(inputs);
+  }
+
+  /** CSV of the same per-row results, with secret seeds masked. */
+  exportStrKeyValidationCsv(inputs: string[]): string {
+    return strKeyBatchToCsv(this.validateStrKeys(inputs));
   }
 
   // ─── GET /inspector/account/:publicKey/txs ────────────────────────────────

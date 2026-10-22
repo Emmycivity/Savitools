@@ -1318,6 +1318,73 @@ curl -X POST http://localhost:3001/api/v1/inspector/decode-xdr \
 
 ---
 
+#### POST `/inspector/strkey/validate`
+
+Validate a batch of Stellar StrKeys offline (no Horizon call). Every value is trimmed and validated independently, so one malformed value never fails the request.
+
+**Limits:** `inputs` must hold 1–500 strings of at most 256 characters each; anything else is rejected with `400`. The global rate limit applies.
+
+**Supported prefixes:** `G` (`ed25519_public_key`), `S` (`ed25519_secret_seed`), `M` (`muxed_account`), `T` (`pre_auth_tx`), `X` (`sha256_hash`), `P` (`signed_payload`), `C` (`contract`).
+
+**Privacy:** values that look like secret seeds (`S…`, any case) are masked in the response (`S****…ABCD`, `redacted: true`), and seeds or JWTs embedded in other text are replaced with `[REDACTED]`. Inputs are not stored or logged. Prefer the browser-only StrKey lab for real secret seeds.
+
+**Request:**
+```bash
+curl -X POST http://localhost:3001/api/v1/inspector/strkey/validate \
+  -H "Content-Type: application/json" \
+  -d '{ "inputs": ["GBZR7...", "gbzr7...", "CAAAA..."] }'
+```
+
+**Response (200):**
+```json
+{
+  "summary": { "total": 3, "valid": 2, "invalid": 1 },
+  "results": [
+    { "index": 0, "input": "GBZR7...", "redacted": false, "valid": true, "keyType": "ed25519_public_key", "error": null },
+    {
+      "index": 1,
+      "input": "gbzr7...",
+      "redacted": false,
+      "valid": false,
+      "keyType": null,
+      "error": { "code": "invalid_characters", "message": "StrKeys use only upper-case A-Z and digits 2-7 (base32)" }
+    },
+    { "index": 2, "input": "CAAAA...", "redacted": false, "valid": true, "keyType": "contract", "error": null }
+  ]
+}
+```
+
+`keyType` is the type implied by the prefix (also on invalid rows), or `null` for an unknown prefix. `error.code` is one of `empty`, `invalid_characters`, `unknown_prefix`, `invalid_length`, `invalid_checksum`.
+
+**Errors:**
+- `400`: `inputs` missing, empty, longer than 500 items, or containing a non-string / over-long value
+
+---
+
+#### POST `/inspector/strkey/validate/export`
+
+Same request body and validation as `/inspector/strkey/validate`; responds with a `text/csv` attachment (`strkey-validation.csv`, UTF-8 BOM for Excel, `Cache-Control: no-store`). One row per input in request order. Secret seeds are masked exactly as in the JSON response, and inputs a spreadsheet would treat as a formula (leading `=`, `+`, `-`, `@`) are prefixed with `'`.
+
+**Request:**
+```bash
+curl -X POST http://localhost:3001/api/v1/inspector/strkey/validate/export \
+  -H "Content-Type: application/json" \
+  -d '{ "inputs": ["GBZR7...", "gbzr7..."] }' \
+  -o strkey-validation.csv
+```
+
+**Response (200):** `text/csv` attachment
+```
+index,input,valid,key_type,error_code,error_message
+0,GBZR7...,true,ed25519_public_key,,
+1,gbzr7...,false,,invalid_characters,StrKeys use only upper-case A-Z and digits 2-7 (base32)
+```
+
+**Errors:**
+- `400`: same as `/inspector/strkey/validate`
+
+---
+
 ### Network
 
 #### GET `/network/status?network=mainnet`
