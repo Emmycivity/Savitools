@@ -40,6 +40,16 @@ interface StrKeyKindSpec {
   isValid: (value: string) => boolean;
 }
 
+/** The SDK has no `isValid*` for T/X keys; a successful decode is the equivalent check. */
+function decodes(decode: (value: string) => unknown, value: string): boolean {
+  try {
+    decode(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const KIND_BY_PREFIX: Record<string, StrKeyKindSpec> = {
   G: {
     kind: 'ed25519_public_key',
@@ -59,12 +69,12 @@ const KIND_BY_PREFIX: Record<string, StrKeyKindSpec> = {
   T: {
     kind: 'pre_auth_tx',
     length: 56,
-    isValid: (value) => StrKey.isValidPreAuthTx(value),
+    isValid: (value) => decodes((v) => StrKey.decodePreAuthTx(v), value),
   },
   X: {
     kind: 'sha256_hash',
     length: 56,
-    isValid: (value) => StrKey.isValidSha256Hash(value),
+    isValid: (value) => decodes((v) => StrKey.decodeSha256Hash(v), value),
   },
   P: {
     kind: 'signed_payload',
