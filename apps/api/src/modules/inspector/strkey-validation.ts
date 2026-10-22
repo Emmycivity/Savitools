@@ -27,11 +27,7 @@ export type StrKeyKind =
   | 'contract';
 
 export type StrKeyErrorCode =
-  | 'empty'
-  | 'unknown_prefix'
-  | 'invalid_characters'
-  | 'invalid_length'
-  | 'invalid_checksum';
+  'empty' | 'unknown_prefix' | 'invalid_characters' | 'invalid_length' | 'invalid_checksum';
 
 interface StrKeyKindSpec {
   kind: StrKeyKind;

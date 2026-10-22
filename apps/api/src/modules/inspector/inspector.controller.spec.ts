@@ -94,10 +94,13 @@ describe('InspectorController', () => {
         .spyOn(service, 'inspectTransaction')
         .mockResolvedValue(sampleBreakdown());
 
-      const response = await app.getHttpAdapter().getInstance().inject({
-        method: 'GET',
-        url: `/inspector/tx/${hash}/export`,
-      });
+      const response = await app
+        .getHttpAdapter()
+        .getInstance()
+        .inject({
+          method: 'GET',
+          url: `/inspector/tx/${hash}/export`,
+        });
 
       expect(response.statusCode).toBe(200);
       expect(response.headers['content-type']).toBe('text/csv; charset=utf-8');
@@ -114,10 +117,13 @@ describe('InspectorController', () => {
         .spyOn(service, 'inspectTransaction')
         .mockResolvedValue(sampleBreakdown('mainnet'));
 
-      const response = await app.getHttpAdapter().getInstance().inject({
-        method: 'GET',
-        url: `/inspector/tx/${hash}/export?network=mainnet`,
-      });
+      const response = await app
+        .getHttpAdapter()
+        .getInstance()
+        .inject({
+          method: 'GET',
+          url: `/inspector/tx/${hash}/export?network=mainnet`,
+        });
 
       expect(response.statusCode).toBe(200);
       expect(inspect).toHaveBeenCalledWith(hash, 'mainnet');
@@ -131,10 +137,13 @@ describe('InspectorController', () => {
         .spyOn(service, 'inspectTransaction')
         .mockResolvedValue(sampleBreakdown());
 
-      const response = await app.getHttpAdapter().getInstance().inject({
-        method: 'GET',
-        url: `/inspector/tx/${hash}`,
-      });
+      const response = await app
+        .getHttpAdapter()
+        .getInstance()
+        .inject({
+          method: 'GET',
+          url: `/inspector/tx/${hash}`,
+        });
 
       expect(response.statusCode).toBe(200);
       expect(response.json().hash).toBe(hash);
@@ -146,11 +155,14 @@ describe('InspectorController', () => {
     const keypair = Keypair.fromRawEd25519Seed(Buffer.alloc(32, 7));
 
     it('returns per-row results with a 200 and masks secret seeds', async () => {
-      const response = await app.getHttpAdapter().getInstance().inject({
-        method: 'POST',
-        url: '/inspector/strkey/validate',
-        payload: { inputs: [keypair.publicKey(), 'bogus', keypair.secret()] },
-      });
+      const response = await app
+        .getHttpAdapter()
+        .getInstance()
+        .inject({
+          method: 'POST',
+          url: '/inspector/strkey/validate',
+          payload: { inputs: [keypair.publicKey(), 'bogus', keypair.secret()] },
+        });
 
       expect(response.statusCode).toBe(200);
       const body = response.json();
